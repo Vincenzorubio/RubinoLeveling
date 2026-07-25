@@ -141,7 +141,7 @@ export default function HomeTab({ date, currentUser }) {
                       <div className="w-7 h-7 rounded-full border-2 border-gray-300 group-hover:border-orange-400 transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-lg font-bold text-black truncate mb-0.5">
+                      <p className="text-lg font-bold text-black break-words mb-0.5">
                         {task.title}
                       </p>
                       {task.addedBy && (
@@ -183,7 +183,7 @@ export default function HomeTab({ date, currentUser }) {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-lg font-bold text-gray-400 line-through truncate mb-0.5">
+                      <p className="text-lg font-bold text-gray-400 line-through break-words mb-0.5">
                         {task.title}
                       </p>
                       {task.addedBy && (

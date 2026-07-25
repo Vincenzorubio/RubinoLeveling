@@ -14,6 +14,7 @@ const MOODS = [
 const ACTIONS = [
   { id: 'gastro', label: 'Gastroprotettore', icon: Pill, color: 'bg-blue-100 text-blue-700' },
   { id: 'cortisone', label: 'Cortisone', icon: Pill, color: 'bg-purple-100 text-purple-700' },
+  { id: 'multivitaminico', label: 'Multivitaminico', icon: Pill, color: 'bg-green-100 text-green-700' },
   { id: 'pappa', label: 'Ha mangiato', icon: Utensils, color: 'bg-orange-100 text-orange-700' }
 ];
 
