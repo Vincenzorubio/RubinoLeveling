@@ -232,15 +232,13 @@ export default function ZaphiraTab({ date, currentUser }) {
                       </span>
                       {editingTimeId === log.id ? (
                         <input
-                          type="text"
-                          maxLength="5"
-                          placeholder="HH:mm"
+                          type="time"
                           value={editTimeValue}
                           onChange={(e) => setEditTimeValue(e.target.value)}
                           onBlur={() => saveLogTime(log)}
                           onKeyDown={(e) => { if (e.key === 'Enter') saveLogTime(log); }}
                           autoFocus
-                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 w-12 text-center"
+                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
                         />
                       ) : (
                         <span 

@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { Plus, Check, Circle, Trash2 } from 'lucide-react';
+import { Plus, Check, Circle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 
 export default function HomeTab({ date, currentUser }) {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [taskToDelete, setTaskToDelete] = useState(null);
-  const [oldUncompletedCount, setOldUncompletedCount] = useState(0);
+  const [oldTasks, setOldTasks] = useState([]);
+  const [showOldTasks, setShowOldTasks] = useState(false);
 
   useEffect(() => {
     if (!db) {
@@ -52,13 +54,15 @@ export default function HomeTab({ date, currentUser }) {
     );
 
     const unsubscribeOld = onSnapshot(qOld, (snapshot) => {
-      let count = 0;
+      const old = [];
       snapshot.forEach(doc => {
-        if (doc.data().date < date) {
-          count++;
+        const data = doc.data();
+        if (data.date < date) {
+          old.push({ id: doc.id, ...data });
         }
       });
-      setOldUncompletedCount(count);
+      old.sort((a, b) => b.date.localeCompare(a.date));
+      setOldTasks(old);
     });
 
     return () => unsubscribeOld();
@@ -123,15 +127,56 @@ export default function HomeTab({ date, currentUser }) {
         </div>
       )}
 
-      {oldUncompletedCount > 0 && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center justify-between shadow-sm mb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="font-bold text-red-600">{oldUncompletedCount}</span>
+      {oldTasks.length > 0 && (
+        <section className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-2 shadow-sm transition-all">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setShowOldTasks(!showOldTasks)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="font-bold text-red-600">{oldTasks.length}</span>
+              </div>
+              <p className="text-sm font-bold text-red-700">Faccende arretrate</p>
             </div>
-            <p className="text-sm font-medium">Faccende arretrate dai giorni scorsi non completate!</p>
+            <button className="text-red-500 p-1">
+              {showOldTasks ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
+          
+          {showOldTasks && (
+            <div className="mt-4 flex flex-col gap-3">
+              {oldTasks.map(task => (
+                <div 
+                  key={task.id} 
+                  onClick={() => toggleTask(task)}
+                  className="flex items-center gap-4 p-3 bg-white rounded-xl border border-red-100 shadow-sm cursor-pointer transition-all active:scale-95 group"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full border-2 border-red-300 group-hover:border-red-500 transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-bold text-black break-words mb-0.5">
+                      {task.title}
+                    </p>
+                    <p className="text-xs text-red-500 font-medium">
+                      Del {format(new Date(task.date), 'dd MMMM', { locale: it })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTaskToDelete(task);
+                    }}
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
       
       <form onSubmit={handleAddTask} className="flex gap-2">
