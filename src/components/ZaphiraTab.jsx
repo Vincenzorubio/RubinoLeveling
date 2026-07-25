@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, serverTimestamp, orderBy, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { Heart, Activity, Pill, Utensils, Send, Smile, Frown, Meh, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -23,6 +23,8 @@ export default function ZaphiraTab({ date, currentUser }) {
   const [noteText, setNoteText] = useState('');
   const [loading, setLoading] = useState(true);
   const [logToDelete, setLogToDelete] = useState(null);
+  const [editingTimeId, setEditingTimeId] = useState(null);
+  const [editTimeValue, setEditTimeValue] = useState('');
 
   useEffect(() => {
     if (!db) {
@@ -96,6 +98,24 @@ export default function ZaphiraTab({ date, currentUser }) {
     if (!timestamp) return 'Ora...';
     const dateObj = new Date(timestamp.toMillis());
     return format(dateObj, 'HH:mm');
+  };
+
+  const saveLogTime = async (log) => {
+    setEditingTimeId(null);
+    if (!editTimeValue || !db) return;
+    
+    try {
+      const [hours, minutes] = editTimeValue.split(':');
+      const [year, month, day] = log.date.split('-');
+      
+      const newDate = new Date(year, parseInt(month) - 1, day, hours, minutes);
+      
+      await updateDoc(doc(db, 'zaphira_logs', log.id), {
+        timestamp: Timestamp.fromDate(newDate)
+      });
+    } catch (error) {
+      console.error("Error updating time:", error);
+    }
   };
 
   const getLogIcon = (log) => {
@@ -204,9 +224,31 @@ export default function ZaphiraTab({ date, currentUser }) {
                       <span className="font-semibold text-gray-800 text-base">
                         {log.type === 'note' ? 'Nota' : log.value}
                       </span>
-                      <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md">
-                        {formatLogTime(log.timestamp)}
-                      </span>
+                      {editingTimeId === log.id ? (
+                        <input
+                          type="time"
+                          value={editTimeValue}
+                          onChange={(e) => setEditTimeValue(e.target.value)}
+                          onBlur={() => saveLogTime(log)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveLogTime(log); }}
+                          autoFocus
+                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        />
+                      ) : (
+                        <span 
+                          onClick={() => {
+                            const timeStr = formatLogTime(log.timestamp);
+                            if (timeStr !== 'Ora...') {
+                              setEditingTimeId(log.id);
+                              setEditTimeValue(timeStr);
+                            }
+                          }}
+                          className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md cursor-pointer hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                          title="Modifica orario"
+                        >
+                          {formatLogTime(log.timestamp)}
+                        </span>
+                      )}
                     </div>
                     {log.type === 'note' && (
                       <p className="text-gray-600 text-sm mb-2 break-words">{log.value}</p>
