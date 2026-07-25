@@ -105,7 +105,13 @@ export default function ZaphiraTab({ date, currentUser }) {
     if (!editTimeValue || !db) return;
     
     try {
-      const [hours, minutes] = editTimeValue.split(':');
+      const parts = editTimeValue.split(':');
+      if (parts.length !== 2) return; // Formato non valido
+      
+      const [hours, minutes] = parts;
+      if (isNaN(hours) || isNaN(minutes) || hours === '' || minutes === '') return;
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return;
+      
       const [year, month, day] = log.date.split('-');
       
       const newDate = new Date(year, parseInt(month) - 1, day, hours, minutes);
@@ -226,13 +232,15 @@ export default function ZaphiraTab({ date, currentUser }) {
                       </span>
                       {editingTimeId === log.id ? (
                         <input
-                          type="time"
+                          type="text"
+                          maxLength="5"
+                          placeholder="HH:mm"
                           value={editTimeValue}
                           onChange={(e) => setEditTimeValue(e.target.value)}
                           onBlur={() => saveLogTime(log)}
                           onKeyDown={(e) => { if (e.key === 'Enter') saveLogTime(log); }}
                           autoFocus
-                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
+                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 w-12 text-center"
                         />
                       ) : (
                         <span 

@@ -10,6 +10,7 @@ export default function HomeTab({ date, currentUser }) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [oldUncompletedCount, setOldUncompletedCount] = useState(0);
 
   useEffect(() => {
     if (!db) {
@@ -39,6 +40,28 @@ export default function HomeTab({ date, currentUser }) {
     });
 
     return () => unsubscribe();
+  }, [date]);
+
+  useEffect(() => {
+    if (!db) return;
+    
+    // Controlla le task non completate dei giorni precedenti
+    const qOld = query(
+      collection(db, 'tasks'),
+      where('completed', '==', false)
+    );
+
+    const unsubscribeOld = onSnapshot(qOld, (snapshot) => {
+      let count = 0;
+      snapshot.forEach(doc => {
+        if (doc.data().date < date) {
+          count++;
+        }
+      });
+      setOldUncompletedCount(count);
+    });
+
+    return () => unsubscribeOld();
   }, [date]);
 
   const handleAddTask = async (e) => {
@@ -97,6 +120,17 @@ export default function HomeTab({ date, currentUser }) {
       {!db && (
         <div className="bg-orange-100 text-orange-800 p-3 rounded-lg text-sm mb-2">
           Database non collegato. Controlla il file .env.local
+        </div>
+      )}
+
+      {oldUncompletedCount > 0 && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center justify-between shadow-sm mb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="font-bold text-red-600">{oldUncompletedCount}</span>
+            </div>
+            <p className="text-sm font-medium">Faccende arretrate dai giorni scorsi non completate!</p>
+          </div>
         </div>
       )}
       
