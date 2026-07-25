@@ -225,15 +225,25 @@ export default function ZaphiraTab({ date, currentUser }) {
                         {log.type === 'note' ? 'Nota' : log.value}
                       </span>
                       {editingTimeId === log.id ? (
-                        <input
-                          type="time"
-                          value={editTimeValue}
-                          onChange={(e) => setEditTimeValue(e.target.value)}
-                          onBlur={() => saveLogTime(log)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') saveLogTime(log); }}
-                          autoFocus
-                          className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
-                        />
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="time"
+                            value={editTimeValue}
+                            onChange={(e) => setEditTimeValue(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveLogTime(log); }}
+                            autoFocus
+                            className="text-xs font-medium text-gray-700 bg-white border border-orange-300 px-1 py-0.5 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              saveLogTime(log);
+                            }}
+                            className="w-6 h-6 flex items-center justify-center bg-orange-100 text-orange-600 rounded-md hover:bg-orange-200"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </button>
+                        </div>
                       ) : (
                         <span 
                           onClick={() => {
