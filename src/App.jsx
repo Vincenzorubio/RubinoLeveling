@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { it } from 'date-fns/locale';
 import Header from './components/Header';
-import BottomTabs from './components/BottomTabs';
 import HomeTab from './components/HomeTab';
-import ZaphiraTab from './components/ZaphiraTab';
 import UserSelector from './components/UserSelector';
+import PushNotificationManager from './components/PushNotificationManager';
 
 function App() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'zaphira'
   const [currentUser, setCurrentUser] = useState(null); // 'Mamma', 'Papà', etc.
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
@@ -29,26 +27,16 @@ function App() {
         onChangeUser={() => setCurrentUser(null)}
       />
 
-      <main className="flex-1 overflow-y-auto p-4 pb-24">
-        {activeTab === 'home' && (
-          <HomeTab 
-            date={formattedDate} 
-            currentUser={currentUser} 
-          />
-        )}
-        
-        {activeTab === 'zaphira' && (
-          <ZaphiraTab 
-            date={formattedDate} 
-            currentUser={currentUser} 
-          />
-        )}
-      </main>
+      <div className="pt-4">
+        <PushNotificationManager currentUser={currentUser} />
+      </div>
 
-      <BottomTabs 
-        activeTab={activeTab} 
-        onChangeTab={setActiveTab} 
-      />
+      <main className="flex-1 overflow-y-auto p-4 pb-24">
+        <HomeTab 
+          date={formattedDate} 
+          currentUser={currentUser} 
+        />
+      </main>
     </div>
   );
 }

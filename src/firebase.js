@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getMessaging } from "firebase/messaging";
 
 // La tua configurazione Firebase (leggi dal file .env.local)
 const firebaseConfig = {
@@ -13,12 +14,14 @@ const firebaseConfig = {
 
 let app;
 let db;
+let messaging;
 
 try {
   // Inizializza Firebase solo se la configurazione è presente
   if (firebaseConfig.apiKey) {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    messaging = getMessaging(app);
   } else {
     console.warn("Firebase config is missing. Database operations will fail. Please set up .env.local");
   }
@@ -26,4 +29,4 @@ try {
   console.error("Error initializing Firebase:", error);
 }
 
-export { app, db };
+export { app, db, messaging };
