@@ -13,9 +13,10 @@ export default function PushNotificationManager({ currentUser }) {
 
     if (Notification.permission === 'granted') {
       const swUrl = `${import.meta.env.BASE_URL}firebase-messaging-sw.js`;
-      navigator.serviceWorker.register(swUrl).then((registration) => {
+      navigator.serviceWorker.register(swUrl).then(async (registration) => {
         const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
         if (vapidKey) {
+          await navigator.serviceWorker.ready;
           // Chiamare getToken inizializza Firebase Messaging con il nostro Service Worker personalizzato
           getToken(messaging, { vapidKey, serviceWorkerRegistration: registration })
             .catch(err => console.log("Errore silente token:", err));
@@ -56,6 +57,7 @@ export default function PushNotificationManager({ currentUser }) {
         // dobbiamo registrare il Service Worker manualmente usando il base URL
         const swUrl = `${import.meta.env.BASE_URL}firebase-messaging-sw.js`;
         const registration = await navigator.serviceWorker.register(swUrl);
+        await navigator.serviceWorker.ready;
         
         const token = await getToken(messaging, { 
           vapidKey,
