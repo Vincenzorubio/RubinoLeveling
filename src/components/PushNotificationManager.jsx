@@ -47,7 +47,15 @@ export default function PushNotificationManager({ currentUser }) {
           return;
         }
 
-        const token = await getToken(messaging, { vapidKey });
+        // Poiché siamo su GitHub Pages (sottocartella /RubinoLeveling/), 
+        // dobbiamo registrare il Service Worker manualmente usando il base URL
+        const swUrl = `${import.meta.env.BASE_URL}firebase-messaging-sw.js`;
+        const registration = await navigator.serviceWorker.register(swUrl);
+        
+        const token = await getToken(messaging, { 
+          vapidKey,
+          serviceWorkerRegistration: registration 
+        });
         
         if (token) {
           console.log('FCM Token ottenuto:', token);
