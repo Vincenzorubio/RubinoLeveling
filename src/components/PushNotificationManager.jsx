@@ -19,6 +19,16 @@ export default function PushNotificationManager({ currentUser }) {
           await navigator.serviceWorker.ready;
           // Chiamare getToken inizializza Firebase Messaging con il nostro Service Worker personalizzato
           getToken(messaging, { vapidKey, serviceWorkerRegistration: registration })
+            .then(async (token) => {
+              if (token) {
+                // Sincronizza il token in Firestore ogni volta che l'app si avvia
+                await setDoc(doc(db, 'fcm_tokens', currentUser), {
+                  token: token,
+                  user: currentUser,
+                  updatedAt: new Date().toISOString()
+                }, { merge: true });
+              }
+            })
             .catch(err => console.log("Errore silente token:", err));
         }
 
