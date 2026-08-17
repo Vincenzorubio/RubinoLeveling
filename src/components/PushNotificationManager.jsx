@@ -9,21 +9,26 @@ export default function PushNotificationManager({ currentUser }) {
   const [isSubscribing, setIsSubscribing] = useState(false);
 
   useEffect(() => {
-    // Listen for foreground messages
-    if (messaging) {
-      const unsubscribe = onMessage(messaging, (payload) => {
-        console.log('Messaggio ricevuto in primo piano:', payload);
-        // We could use react-hot-toast here if available, or just standard Notification
-        if (Notification.permission === 'granted') {
+    if (!messaging) return;
+
+    if (Notification.permission === 'granted') {
+      const swUrl = `${import.meta.env.BASE_URL}firebase-messaging-sw.js`;
+      navigator.serviceWorker.register(swUrl).then((registration) => {
+        const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+        if (vapidKey) {
+          // Chiamare getToken inizializza Firebase Messaging con il nostro Service Worker personalizzato
+          getToken(messaging, { vapidKey, serviceWorkerRegistration: registration })
+            .catch(err => console.log("Errore silente token:", err));
+        }
+
+        onMessage(messaging, (payload) => {
+          console.log('Messaggio ricevuto in primo piano:', payload);
           new Notification(payload.notification.title || 'Nuova notifica', {
             body: payload.notification.body || '',
             icon: '/vite.svg'
           });
-        } else {
-          alert(`${payload.notification.title}: ${payload.notification.body}`);
-        }
-      });
-      return () => unsubscribe();
+        });
+      }).catch(err => console.error("Errore registrazione SW:", err));
     }
   }, []);
 
