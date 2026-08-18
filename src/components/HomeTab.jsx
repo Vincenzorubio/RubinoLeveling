@@ -238,6 +238,63 @@ export default function HomeTab({ date, currentUser }) {
           )}
         </section>
       )}
+
+      {futureTasks.length > 0 && (
+        <section className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-2 shadow-sm transition-all">
+          <div 
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setShowFutureTasks(!showFutureTasks)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="font-bold text-blue-600">{futureTasks.length}</span>
+              </div>
+              <p className="text-sm font-bold text-blue-700">Faccende programmate</p>
+            </div>
+            <button className="text-blue-500 p-1">
+              {showFutureTasks ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+          </div>
+          
+          {showFutureTasks && (
+            <div className="mt-4 flex flex-col gap-3">
+              {futureTasks.map(task => (
+                <div 
+                  key={task.id} 
+                  onPointerDown={(e) => handlePointerDown(e, task)}
+                  onPointerUp={handlePointerUpOrLeave}
+                  onPointerLeave={handlePointerUpOrLeave}
+                  onPointerCancel={handlePointerUpOrLeave}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={(e) => handleTaskClick(e, task)}
+                  className="flex items-center gap-4 p-3 bg-white rounded-xl border border-blue-100 shadow-sm cursor-pointer transition-all active:scale-95 group select-none"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full border-2 border-blue-300 group-hover:border-blue-500 transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-bold text-black break-words mb-0.5">
+                      {task.title}
+                    </p>
+                    <p className="text-xs text-blue-500 font-medium">
+                      Prevista per il {format(new Date(task.date), 'dd MMMM', { locale: it })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTaskToDelete(task);
+                    }}
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
       
       <form onSubmit={handleAddTask} className="flex gap-2">
         <input 
@@ -361,63 +418,6 @@ export default function HomeTab({ date, currentUser }) {
             </section>
           )}
         </div>
-      )}
-
-      {futureTasks.length > 0 && (
-        <section className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mt-2 mb-2 shadow-sm transition-all">
-          <div 
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => setShowFutureTasks(!showFutureTasks)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="font-bold text-blue-600">{futureTasks.length}</span>
-              </div>
-              <p className="text-sm font-bold text-blue-700">Faccende programmate</p>
-            </div>
-            <button className="text-blue-500 p-1">
-              {showFutureTasks ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </button>
-          </div>
-          
-          {showFutureTasks && (
-            <div className="mt-4 flex flex-col gap-3">
-              {futureTasks.map(task => (
-                <div 
-                  key={task.id} 
-                  onPointerDown={(e) => handlePointerDown(e, task)}
-                  onPointerUp={handlePointerUpOrLeave}
-                  onPointerLeave={handlePointerUpOrLeave}
-                  onPointerCancel={handlePointerUpOrLeave}
-                  onContextMenu={(e) => e.preventDefault()}
-                  onClick={(e) => handleTaskClick(e, task)}
-                  className="flex items-center gap-4 p-3 bg-white rounded-xl border border-blue-100 shadow-sm cursor-pointer transition-all active:scale-95 group select-none"
-                >
-                  <div className="flex-shrink-0">
-                    <div className="w-6 h-6 rounded-full border-2 border-blue-300 group-hover:border-blue-500 transition-colors" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-bold text-black break-words mb-0.5">
-                      {task.title}
-                    </p>
-                    <p className="text-xs text-blue-500 font-medium">
-                      Prevista per il {format(new Date(task.date), 'dd MMMM', { locale: it })}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setTaskToDelete(task);
-                    }}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       )}
 
       {/* Delete Confirmation Modal */}
