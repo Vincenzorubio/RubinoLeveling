@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, orderBy, deleteDoc } from 'firebase/firestore';
-import { Plus, Check, Circle, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Check, Circle, Trash2, ChevronDown, ChevronUp, Edit3 } from 'lucide-react';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -11,8 +11,16 @@ export default function HomeTab({ date, currentUser }) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDate, setEditDate] = useState('');
+
   const [oldTasks, setOldTasks] = useState([]);
   const [showOldTasks, setShowOldTasks] = useState(false);
+
+  const timerRef = useRef(null);
+  const isLongPressTriggered = useRef(false);
 
   useEffect(() => {
     if (!db) {
@@ -116,6 +124,46 @@ export default function HomeTab({ date, currentUser }) {
     }
   };
 
+  const handlePointerDown = (e, task) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    
+    isLongPressTriggered.current = false;
+    timerRef.current = setTimeout(() => {
+      isLongPressTriggered.current = true;
+      setTaskToEdit(task);
+      setEditTitle(task.title);
+      setEditDate(task.date);
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(50);
+      }
+    }, 500);
+  };
+
+  const handlePointerUpOrLeave = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+  };
+
+  const handleTaskClick = (e, task) => {
+    e.preventDefault();
+    if (isLongPressTriggered.current) return;
+    toggleTask(task);
+  };
+
+  const confirmEditTask = async () => {
+    if (!db || !taskToEdit || !editTitle.trim() || !editDate) return;
+    try {
+      await updateDoc(doc(db, 'tasks', taskToEdit.id), {
+        title: editTitle.trim(),
+        date: editDate
+      });
+      setTaskToEdit(null);
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
   const todoTasks = tasks.filter(t => !t.completed);
   const completedTasks = tasks.filter(t => t.completed);
 
@@ -149,8 +197,13 @@ export default function HomeTab({ date, currentUser }) {
               {oldTasks.map(task => (
                 <div 
                   key={task.id} 
-                  onClick={() => toggleTask(task)}
-                  className="flex items-center gap-4 p-3 bg-white rounded-xl border border-red-100 shadow-sm cursor-pointer transition-all active:scale-95 group"
+                  onPointerDown={(e) => handlePointerDown(e, task)}
+                  onPointerUp={handlePointerUpOrLeave}
+                  onPointerLeave={handlePointerUpOrLeave}
+                  onPointerCancel={handlePointerUpOrLeave}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={(e) => handleTaskClick(e, task)}
+                  className="flex items-center gap-4 p-3 bg-white rounded-xl border border-red-100 shadow-sm cursor-pointer transition-all active:scale-95 group select-none"
                 >
                   <div className="flex-shrink-0">
                     <div className="w-6 h-6 rounded-full border-2 border-red-300 group-hover:border-red-500 transition-colors" />
@@ -213,8 +266,13 @@ export default function HomeTab({ date, currentUser }) {
                 {todoTasks.map(task => (
                   <div 
                     key={task.id} 
-                    onClick={() => toggleTask(task)}
-                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-sm cursor-pointer transition-all active:scale-95 hover:border-orange-200 group"
+                    onPointerDown={(e) => handlePointerDown(e, task)}
+                    onPointerUp={handlePointerUpOrLeave}
+                    onPointerLeave={handlePointerUpOrLeave}
+                    onPointerCancel={handlePointerUpOrLeave}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={(e) => handleTaskClick(e, task)}
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-sm cursor-pointer transition-all active:scale-95 hover:border-orange-200 group select-none"
                   >
                     <div className="flex-shrink-0">
                       <div className="w-7 h-7 rounded-full border-2 border-gray-300 group-hover:border-orange-400 transition-colors" />
@@ -253,8 +311,13 @@ export default function HomeTab({ date, currentUser }) {
                 {completedTasks.map(task => (
                   <div 
                     key={task.id} 
-                    onClick={() => toggleTask(task)}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border-2 border-transparent cursor-pointer transition-all active:scale-95 group"
+                    onPointerDown={(e) => handlePointerDown(e, task)}
+                    onPointerUp={handlePointerUpOrLeave}
+                    onPointerLeave={handlePointerUpOrLeave}
+                    onPointerCancel={handlePointerUpOrLeave}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={(e) => handleTaskClick(e, task)}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border-2 border-transparent cursor-pointer transition-all active:scale-95 group select-none"
                   >
                     <div className="flex-shrink-0">
                       <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center">
@@ -316,6 +379,55 @@ export default function HomeTab({ date, currentUser }) {
                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-sm"
               >
                 Elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {taskToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-xl max-w-sm w-full p-6 transform scale-100">
+            <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center mb-4 mx-auto">
+              <Edit3 className="w-6 h-6 text-orange-600" />
+            </div>
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-4">Modifica Faccenda</h3>
+            
+            <div className="flex flex-col gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Nome</label>
+                <input 
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 font-medium text-black focus:outline-none focus:border-orange-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Data</label>
+                <input 
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3 font-medium text-black focus:outline-none focus:border-orange-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setTaskToEdit(null)}
+                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={confirmEditTask}
+                disabled={!editTitle.trim() || !editDate}
+                className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors shadow-sm"
+              >
+                Salva
               </button>
             </div>
           </div>
