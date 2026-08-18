@@ -10,9 +10,19 @@ export default function Header({ date, onPrevDay, onNextDay, onDateChange, curre
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3 flex flex-col gap-3 sticky top-0 z-10">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-orange-600 tracking-tight">
-          Casa Rubino
-        </h1>
+        <div className="flex flex-col items-start">
+          <h1 className="text-2xl font-black text-orange-600 tracking-tight leading-none">
+            Casa Rubino
+          </h1>
+          {!isToday(date) && (
+            <button 
+              onClick={() => onDateChange(new Date())}
+              className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-lg mt-2 active:scale-95 transition-transform"
+            >
+              Torna a Oggi
+            </button>
+          )}
+        </div>
         <button 
           onClick={onChangeUser}
           className="flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-full text-sm font-bold active:scale-95 transition-transform shadow-sm"
